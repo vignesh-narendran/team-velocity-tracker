@@ -10,3 +10,5 @@ frontend/src/assets/
 frontend/public/
 make_backend.js
 make_frontend.js
+.DS_Store
+backend/uploads/*
