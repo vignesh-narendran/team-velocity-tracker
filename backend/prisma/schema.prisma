@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Setting {
+  id Int @id @default(1)
+  logoUrl String?
+  companyName String @default("Company Name")
+  accentColor String @default("onyx")
+  roles String @default("[\"Developer\", \"QA\", \"Manager\", \"Architect\"]")
+  sprintStatuses String @default("[\"Planning\", \"Active\", \"Completed\"]")
+  projectStatuses String @default("[\"Upcoming\", \"Active\", \"Completed\"]")
+  complexities String @default("[\"Easy\", \"Medium\", \"Hard\"]")
+  spToHours Int @default(8)
+  ignoreLeaves Boolean @default(false)
+}
+
+model Member {
+  id Int @id @default(autoincrement())
+  name String
+  role String
+  projects MemberProject[]
+  sprints MemberSprint[]
+  stories Story[]
+  leaves Leave[]
+  dsus DsuUpdate[]
+}
+
+model Project {
+  id Int @id @default(autoincrement())
+  name String
+  startDate DateTime
+  endDate DateTime
+  managerId Int?
+  architectId Int?
+  projectType String
+  members MemberProject[]
+  sprints Sprint[]
+}
+
+model MemberProject {
+  id Int @id @default(autoincrement())
+  memberId Int
+  projectId Int
+  allocationStart DateTime
+  allocationEnd DateTime
+  member Member @relation(fields: [memberId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+}
+
+model Sprint {
+  id Int @id @default(autoincrement())
+  sprintNumber Int
+  projectId Int
+  startDate DateTime
+  endDate DateTime
+  proposedVelocity Int?
+  status String
+  project Project @relation(fields: [projectId], references: [id])
+  members MemberSprint[]
+  stories Story[]
+}
+
+model MemberSprint {
+  id Int @id @default(autoincrement())
+  memberId Int
+  sprintId Int
+  member Member @relation(fields: [memberId], references: [id])
+  sprint Sprint @relation(fields: [sprintId], references: [id])
+}
+
+model Story {
+  id Int @id @default(autoincrement())
+  sprintId Int
+  storyNumber String
+  name String
+  stage String @default("todo")
+  frontendId Int?
+  frontendHours Int @default(0)
+  backendId Int?
+  backendHours Int @default(0)
+  qaId Int?
+  qaHours Int @default(0)
+  authorId Int?
+  authorHours Int @default(0)
+  storyPoints Int @default(0)
+  complexity String @default("Easy")
+  proposedStart DateTime
+  proposedEnd DateTime
+  sprint Sprint @relation(fields: [sprintId], references: [id])
+  dsus DsuUpdate[]
+  authorMember Member? @relation(fields: [authorId], references: [id])
+}
+
+model Leave {
+  id Int @id @default(autoincrement())
+  memberId Int?
+  projectId Int?
+  startDate DateTime
+  endDate DateTime
+  reason String?
+  member Member? @relation(fields: [memberId], references: [id])
+}
+
+model DsuUpdate {
+  id Int @id @default(autoincrement())
+  storyId Int
+  memberId Int
+  date DateTime @default(now())
+  statusUpdate String
+  targetCompletion DateTime
+  isBlocked Boolean @default(false)
+  story Story @relation(fields: [storyId], references: [id])
+  member Member @relation(fields: [memberId], references: [id])
+}

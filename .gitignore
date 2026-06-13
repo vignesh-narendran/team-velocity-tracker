@@ -1,0 +1,12 @@
+node_modules/
+dev.db
+dist/
+build/
+backend/**/*.js
+backend/**/*.js.map
+backend/**/*.d.ts
+backend/**/*.d.ts.map
+frontend/src/assets/
+frontend/public/
+make_backend.js
+make_frontend.js

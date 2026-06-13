@@ -1,0 +1,8 @@
+node_modules/
+dev.db
+dist/
+build/
+backend/**/*.js
+backend/**/*.js.map
+backend/**/*.d.ts
+backend/**/*.d.ts.map

@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import multer from 'multer';
+import { prisma } from '../prisma';
+import path from 'path';
+const router = Router();
+const storage = multer.diskStorage({ destination: (req, file, cb) => cb(null, 'uploads/'), filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)) });
+const upload = multer({ storage });
+router.get('/', async (req, res) => { let setting = await prisma.setting.findFirst(); if (!setting) setting = await prisma.setting.create({ data: {} }); res.json(setting); });
+router.put('/', upload.single('logo'), async (req, res) => { const { companyName, accentColor, roles, sprintStatuses, projectStatuses, complexities, spToHours, ignoreLeaves } = req.body; let setting = await prisma.setting.findFirst(); const updateData: any = {}; if (companyName) updateData.companyName = companyName; if (accentColor) updateData.accentColor = accentColor; if (roles) updateData.roles = roles; if (sprintStatuses) updateData.sprintStatuses = sprintStatuses; if (projectStatuses) updateData.projectStatuses = projectStatuses; if (complexities) updateData.complexities = complexities; if (spToHours) updateData.spToHours = parseInt(spToHours); if (ignoreLeaves) updateData.ignoreLeaves = ignoreLeaves === 'true'; if (req.file) updateData.logoUrl = '/uploads/' + req.file.filename; if (setting) setting = await prisma.setting.update({ where: { id: setting.id }, data: updateData }); else setting = await prisma.setting.create({ data: updateData }); res.json(setting); });
+export default router;
