@@ -40,18 +40,38 @@ export default function StoriesView() {
   useEffect(() => { fetchData(); }, []);
 
   const checkAvailability = async () => {
+    if (!formData.proposedStart || !formData.proposedEnd) return;
+
     const res = await axios.get(`${API_URL}/analytics/team-availability`);
     const availability = res.data;
 
     const assignedIds = [formData.frontendId, formData.backendId, formData.qaId, formData.authorId].filter(id => id && id !== '');
 
     let warning = null;
+    const pStart = new Date(formData.proposedStart).getTime();
+    const pEnd = new Date(formData.proposedEnd).getTime();
+
     for (const id of assignedIds) {
       const memStatus = availability.find((a: any) => a.member.id === parseInt(id));
-      if (memStatus && memStatus.status === 'leave') {
-        warning = `Warning: Member ${memStatus.member.name} is on leave!`;
-      } else if (memStatus && memStatus.status === 'busy') {
-        warning = `Warning: Member ${memStatus.member.name} is already busy!`;
+      if (!memStatus) continue;
+
+      // 1. Check if the member is on leave during this timeframe
+      const leaves = memStatus.allLeaves || [];
+      const hasConflictLeave = leaves.some((l: any) => {
+        const lStart = new Date(l.startDate).getTime();
+        const lEnd = new Date(l.endDate).getTime();
+        // Overlap condition
+        return pStart <= lEnd && pEnd >= lStart;
+      });
+
+      if (hasConflictLeave) {
+        warning = `Warning: Member ${memStatus.member.name} is on leave during the proposed story timeframe!`;
+        break;
+      }
+
+      // 2. Check general "already busy" metric just as a friendly FYI
+      if (memStatus.status === 'busy' && !warning) {
+        warning = `Warning: Member ${memStatus.member.name} is already highly loaded.`;
       }
     }
     setOverloadWarning(warning);

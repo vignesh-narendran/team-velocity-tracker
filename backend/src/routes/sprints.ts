@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
 const router = Router();
-router.get('/', async (req, res) => res.json(await prisma.sprint.findMany({ include: { members: { include: { member: true } } } })));
+router.get('/', async (req, res) => res.json(await prisma.sprint.findMany({ include: { members: { include: { member: true } }, stories: true } })));
 router.post('/', async (req, res) => { let { sprintNumber, projectId, startDate, endDate, proposedVelocity, status, memberIds } = req.body; if (!sprintNumber) { const last = await prisma.sprint.findFirst({ where: { projectId }, orderBy: { sprintNumber: 'desc' } }); sprintNumber = last ? last.sprintNumber + 1 : 1; } res.json(await prisma.sprint.create({ data: { sprintNumber, projectId, startDate: new Date(startDate), endDate: new Date(endDate), proposedVelocity, status, members: { create: (memberIds || []).map((id:any) => ({ memberId: id })) } } })); });
 router.put('/:id', async (req, res) => { const { sprintNumber, startDate, endDate, proposedVelocity, status, memberIds } = req.body; await prisma.memberSprint.deleteMany({ where: { sprintId: parseInt(req.params.id) }}); res.json(await prisma.sprint.update({ where: { id: parseInt(req.params.id) }, data: { sprintNumber, startDate: new Date(startDate), endDate: new Date(endDate), proposedVelocity, status, members: { create: (memberIds || []).map((id:any) => ({ memberId: id })) } } })); });
 router.delete('/:id', async (req, res) => { await prisma.sprint.delete({ where: { id: parseInt(req.params.id) } }); res.json({ success: true }); });
