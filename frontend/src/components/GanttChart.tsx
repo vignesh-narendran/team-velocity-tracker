@@ -99,6 +99,15 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType, 
     // Group tasks by person assigned. A person might be assigned multiple stages across stories.
     // Simplified for demo: just list people and blocks.
     const peopleMap = new Map();
+    // Initialize with all members if availability is provided
+    if (availability) {
+      availability.forEach(a => {
+        if (a.member && a.member.id) {
+          peopleMap.set(a.member.id, { id: a.member.id, name: a.member.name, tasks: [] });
+        }
+      });
+    }
+
     stories.forEach(s => {
       [
         { id: s.frontendId, name: s.frontendMember?.name || 'Unassigned (FE)', type: 'frontend', start: s.frontendStart, end: s.frontendEnd },
@@ -108,7 +117,7 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType, 
       ].forEach(assignment => {
         if (!assignment.id || !assignment.start || !assignment.end) return;
         if (!peopleMap.has(assignment.id)) {
-          peopleMap.set(assignment.id, { name: assignment.name, tasks: [] });
+          peopleMap.set(assignment.id, { id: assignment.id, name: assignment.name, tasks: [] });
         }
         peopleMap.get(assignment.id).tasks.push({ story: s, type: assignment.type, start: assignment.start, end: assignment.end });
       });
