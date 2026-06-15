@@ -4,12 +4,13 @@ import StatusDot from './StatusDot';
 
 interface GanttProps {
   stories: any[];
+  availability?: any[];
   sprintStart: Date;
   sprintEnd: Date;
   viewType: 'task' | 'people'; // "team view" excluded per request
 }
 
-export default function GanttChart({ stories, sprintStart, sprintEnd, viewType }: GanttProps) {
+export default function GanttChart({ stories, sprintStart, sprintEnd, viewType, availability }: GanttProps) {
   const totalDays = differenceInDays(sprintEnd, sprintStart) + 1;
   const daysArray = Array.from({ length: totalDays }, (_, i) => addDays(sprintStart, i));
 
@@ -119,6 +120,7 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType }
           {person.name}
         </div>
         <div className="flex-1 relative h-full">
+           {/* Tasks */ }
            {person.tasks.map((task: any, tIdx: number) => {
              const sStart = new Date(task.start);
              const sEnd = new Date(task.end);
@@ -135,6 +137,26 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType }
                    backgroundColor: (stageColors as any)[task.type]
                  }}
                  title={`${task.story.storyNumber} (${task.type})`}
+               />
+             );
+           })}
+           {/* Leaves */}
+           {availability?.find(a => a.member.id === person.id)?.allLeaves?.map((leave: any, lIdx: number) => {
+             const lStart = new Date(leave.startDate);
+             const lEnd = new Date(leave.endDate);
+             const startOffsetDays = differenceInDays(lStart, sprintStart);
+             const durationDays = differenceInDays(lEnd, lStart) + 1;
+
+             return (
+               <div
+                 key={`leave-${lIdx}`}
+                 className="absolute top-2 bottom-2 rounded opacity-50 bg-slate-400"
+                 style={{
+                   left: `${Math.max(0, (startOffsetDays / totalDays) * 100)}%`,
+                   width: `${(durationDays / totalDays) * 100}%`,
+                   backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.2) 5px, rgba(0,0,0,0.2) 10px)'
+                 }}
+                 title={`On Leave: ${leave.reason || 'Not specified'}`}
                />
              );
            })}
