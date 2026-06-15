@@ -20,8 +20,8 @@ export default function StoriesView() {
 
   const initData = {
     id: null, sprintId: '', storyNumber: '', name: '', stage: 'todo',
-    frontendId: '', frontendHours: 0, backendId: '', backendHours: 0,
-    qaId: '', qaHours: 0, authorId: '', authorHours: 0, complexity: complexities[0],
+    frontendId: '', frontendStart: '', frontendEnd: '', backendId: '', backendStart: '', backendEnd: '',
+    qaId: '', qaStart: '', qaEnd: '', authorId: '', authorStart: '', authorEnd: '', complexity: complexities[0],
     proposedStart: '', proposedEnd: ''
   };
   const [formData, setFormData] = useState<any>(initData);
@@ -92,10 +92,10 @@ export default function StoriesView() {
       backendId: formData.backendId ? parseInt(formData.backendId) : null,
       qaId: formData.qaId ? parseInt(formData.qaId) : null,
       authorId: formData.authorId ? parseInt(formData.authorId) : null,
-      frontendHours: parseInt(formData.frontendHours) || 0,
-      backendHours: parseInt(formData.backendHours) || 0,
-      qaHours: parseInt(formData.qaHours) || 0,
-      authorHours: parseInt(formData.authorHours) || 0,
+      frontendStart: formData.frontendStart || null, frontendEnd: formData.frontendEnd || null,
+      backendStart: formData.backendStart || null, backendEnd: formData.backendEnd || null,
+      qaStart: formData.qaStart || null, qaEnd: formData.qaEnd || null,
+      authorStart: formData.authorStart || null, authorEnd: formData.authorEnd || null,
     };
     if (formData.id) {
       await axios.put(`${API_URL}/stories/${formData.id}`, payload);
@@ -156,10 +156,18 @@ export default function StoriesView() {
                         {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                       </select>
                     </div>
-                    <div className="grid gap-2">
-                      <Label>Frontend Hours</Label>
-                      <Input type="number" value={formData.frontendHours} onChange={e => setFormData({ ...formData, frontendHours: e.target.value })} />
+
+                      <div className="col-span-2 grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Frontend Start</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.frontendStart ? formData.frontendStart.split('T')[0] : ''} onChange={e => setFormData({ ...formData, frontendStart: e.target.value })} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Frontend End</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.frontendEnd ? formData.frontendEnd.split('T')[0] : ''} onChange={e => setFormData({ ...formData, frontendEnd: e.target.value })} />
+                      </div>
                     </div>
+
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -170,10 +178,18 @@ export default function StoriesView() {
                         {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                       </select>
                     </div>
-                    <div className="grid gap-2">
-                      <Label>Backend Hours</Label>
-                      <Input type="number" value={formData.backendHours} onChange={e => setFormData({ ...formData, backendHours: e.target.value })} />
+
+                      <div className="col-span-2 grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Backend Start</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.backendStart ? formData.backendStart.split('T')[0] : ''} onChange={e => setFormData({ ...formData, backendStart: e.target.value })} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Backend End</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.backendEnd ? formData.backendEnd.split('T')[0] : ''} onChange={e => setFormData({ ...formData, backendEnd: e.target.value })} />
+                      </div>
                     </div>
+
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -184,10 +200,18 @@ export default function StoriesView() {
                         {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                       </select>
                     </div>
-                    <div className="grid gap-2">
-                      <Label>QA Hours</Label>
-                      <Input type="number" value={formData.qaHours} onChange={e => setFormData({ ...formData, qaHours: e.target.value })} />
+
+                      <div className="col-span-2 grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>QA Start</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.qaStart ? formData.qaStart.split('T')[0] : ''} onChange={e => setFormData({ ...formData, qaStart: e.target.value })} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>QA End</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.qaEnd ? formData.qaEnd.split('T')[0] : ''} onChange={e => setFormData({ ...formData, qaEnd: e.target.value })} />
+                      </div>
                     </div>
+
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -198,10 +222,18 @@ export default function StoriesView() {
                         {members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                       </select>
                     </div>
-                    <div className="grid gap-2">
-                      <Label>Author Hours</Label>
-                      <Input type="number" value={formData.authorHours} onChange={e => setFormData({ ...formData, authorHours: e.target.value })} />
+
+                      <div className="col-span-2 grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>Author Start</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.authorStart ? formData.authorStart.split('T')[0] : ''} onChange={e => setFormData({ ...formData, authorStart: e.target.value })} />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label>Author End</Label>
+                        <Input type="date" min={formData.proposedStart ? formData.proposedStart.split('T')[0] : ''} max={formData.proposedEnd ? formData.proposedEnd.split('T')[0] : ''} value={formData.authorEnd ? formData.authorEnd.split('T')[0] : ''} onChange={e => setFormData({ ...formData, authorEnd: e.target.value })} />
+                      </div>
                     </div>
+
                   </div>
                 </div>
 
@@ -227,6 +259,7 @@ export default function StoriesView() {
               <TableHead>Stage</TableHead>
               <TableHead>Points</TableHead>
               <TableHead>Complexity</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -238,6 +271,11 @@ export default function StoriesView() {
                 <TableCell>{s.stage}</TableCell>
                 <TableCell>{s.storyPoints}</TableCell>
                 <TableCell>{s.complexity}</TableCell>
+
+                <TableCell>
+                  <Button variant="outline" size="sm" className="mr-2" onClick={() => { setFormData({...s}); setOpen(true); }}>Edit</Button>
+                  <Button variant="destructive" size="sm" onClick={async () => { if(confirm('Are you sure?')) { await axios.delete(`${API_URL}/stories/${s.id}`); fetchData(); } }}>Delete</Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

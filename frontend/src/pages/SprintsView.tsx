@@ -121,6 +121,7 @@ export default function SprintsView() {
               <TableHead>Project</TableHead>
               <TableHead>Dates</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -130,6 +131,10 @@ export default function SprintsView() {
                 <TableCell>{projects.find(p => p.id === s.projectId)?.name}</TableCell>
                 <TableCell>{new Date(s.startDate).toLocaleDateString()} - {new Date(s.endDate).toLocaleDateString()}</TableCell>
                 <TableCell>{s.status}</TableCell>
+                <TableCell>
+                  <Button variant="outline" size="sm" className="mr-2" onClick={() => { setFormData({...s, memberIds: s.members?.map((m:any) => m.memberId) || []}); setOpen(true); }}>Edit</Button>
+                  <Button variant="destructive" size="sm" onClick={async () => { if(confirm('Are you sure?')) { await axios.delete(`${API_URL}/sprints/${s.id}`); fetchData(); } }}>Delete</Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
