@@ -1,5 +1,6 @@
 
 import { differenceInDays, addDays, format, isWeekend } from 'date-fns';
+import StatusDot from './StatusDot';
 
 interface GanttProps {
   stories: any[];
@@ -62,7 +63,7 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType }
     return (
       <div key={story.id} className="relative h-12 border-b flex items-center group">
         <div className="w-48 flex-shrink-0 px-2 truncate text-sm font-medium border-r z-10 bg-white dark:bg-slate-800">
-          {story.storyNumber} - {story.name}
+          <div className="flex items-center gap-2"><StatusDot story={story} /> {story.storyNumber}</div>
         </div>
         <div className="flex-1 relative h-full">
           {/* Main proposed overall story border indicator (optional, maybe helpful for context) */}
