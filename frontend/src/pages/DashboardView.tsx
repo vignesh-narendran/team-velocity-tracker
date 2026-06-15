@@ -113,6 +113,7 @@ export default function DashboardView() {
                sprintStart={ganttStart}
                sprintEnd={ganttEnd}
                viewType={ganttView}
+               availability={availability}
              />
           </CardContent>
         </Card>
