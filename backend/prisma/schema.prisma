@@ -25,7 +25,10 @@ model Member {
   role String
   projects MemberProject[]
   sprints MemberSprint[]
-  stories Story[]
+    authoredStories Story[] @relation("AuthorToStory")
+  frontendStories Story[] @relation("FrontendToStory")
+  backendStories Story[] @relation("BackendToStory")
+  qaStories Story[] @relation("QaToStory")
   leaves Leave[]
   dsus DsuUpdate[]
 }
@@ -97,7 +100,10 @@ model Story {
   proposedEnd DateTime
   sprint Sprint @relation(fields: [sprintId], references: [id])
   dsus DsuUpdate[]
-  authorMember Member? @relation(fields: [authorId], references: [id])
+  authorMember Member? @relation("AuthorToStory", fields: [authorId], references: [id])
+  frontendMember Member? @relation("FrontendToStory", fields: [frontendId], references: [id])
+  backendMember Member? @relation("BackendToStory", fields: [backendId], references: [id])
+  qaMember Member? @relation("QaToStory", fields: [qaId], references: [id])
 }
 
 model Leave {

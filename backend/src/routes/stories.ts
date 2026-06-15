@@ -35,7 +35,7 @@ function calculateStoryPoints(d: any, sph: number): number {
   return fib.find(f => f >= Math.ceil(rsp)) || 34;
 }
 
-router.get('/', async (req, res) => res.json(await prisma.story.findMany({ include: { dsus: true } })));
+router.get('/', async (req, res) => res.json(await prisma.story.findMany({ include: { dsus: true, frontendMember: true, backendMember: true, qaMember: true, authorMember: true } })));
 
 router.post('/', async (req, res) => {
   const d = req.body;
