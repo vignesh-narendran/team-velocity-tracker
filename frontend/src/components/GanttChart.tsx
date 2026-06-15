@@ -108,7 +108,7 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType, 
       ].forEach(assignment => {
         if (!assignment.id || !assignment.start || !assignment.end) return;
         if (!peopleMap.has(assignment.id)) {
-          peopleMap.set(assignment.id, { name: assignment.name, tasks: [] });
+          peopleMap.set(assignment.id, { id: assignment.id, name: assignment.name, tasks: [] });
         }
         peopleMap.get(assignment.id).tasks.push({ story: s, type: assignment.type, start: assignment.start, end: assignment.end });
       });
