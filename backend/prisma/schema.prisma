@@ -80,13 +80,17 @@ model Story {
   name String
   stage String @default("todo")
   frontendId Int?
-  frontendHours Int @default(0)
+  frontendStart DateTime?
+  frontendEnd DateTime?
   backendId Int?
-  backendHours Int @default(0)
+  backendStart DateTime?
+  backendEnd DateTime?
   qaId Int?
-  qaHours Int @default(0)
+  qaStart DateTime?
+  qaEnd DateTime?
   authorId Int?
-  authorHours Int @default(0)
+  authorStart DateTime?
+  authorEnd DateTime?
   storyPoints Int @default(0)
   complexity String @default("Easy")
   proposedStart DateTime

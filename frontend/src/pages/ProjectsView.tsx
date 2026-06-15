@@ -99,6 +99,7 @@ export default function ProjectsView() {
               <TableHead>Name</TableHead>
               <TableHead>Dates</TableHead>
               <TableHead>Type</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -107,6 +108,10 @@ export default function ProjectsView() {
                 <TableCell className="font-medium">{p.name}</TableCell>
                 <TableCell>{new Date(p.startDate).toLocaleDateString()} - {new Date(p.endDate).toLocaleDateString()}</TableCell>
                 <TableCell>{p.projectType}</TableCell>
+                <TableCell>
+                  <Button variant="outline" size="sm" className="mr-2" onClick={() => { setFormData({...p, managerId: p.managerId || '', architectId: p.architectId || ''}); setOpen(true); }}>Edit</Button>
+                  <Button variant="destructive" size="sm" onClick={async () => { if(confirm('Are you sure?')) { await axios.delete(`${API_URL}/projects/${p.id}`); fetchProjects(); } }}>Delete</Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
