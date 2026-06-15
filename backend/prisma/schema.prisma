@@ -15,6 +15,7 @@ model Setting {
   sprintStatuses String @default("[\"Planning\", \"Active\", \"Completed\"]")
   projectStatuses String @default("[\"Upcoming\", \"Active\", \"Completed\"]")
   complexities String @default("[\"Easy\", \"Medium\", \"Hard\"]")
+  storyStages String @default("[\"Todo\", \"In Progress\", \"Done\"]")
   spToHours Int @default(8)
   ignoreLeaves Boolean @default(false)
 }
@@ -124,6 +125,7 @@ model DsuUpdate {
   statusUpdate String
   targetCompletion DateTime
   isBlocked Boolean @default(false)
+  stageUpdate String?
   story Story @relation(fields: [storyId], references: [id])
   member Member @relation(fields: [memberId], references: [id])
 }

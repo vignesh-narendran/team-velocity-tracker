@@ -15,6 +15,7 @@ export default function SettingsView() {
     sprintStatuses: '',
     projectStatuses: '',
     complexities: '',
+    storyStages: '',
     spToHours: 8,
     ignoreLeaves: false,
   });
@@ -29,6 +30,7 @@ export default function SettingsView() {
         sprintStatuses: settings.sprintStatuses,
         projectStatuses: settings.projectStatuses,
         complexities: settings.complexities,
+        storyStages: settings.storyStages,
         spToHours: settings.spToHours,
         ignoreLeaves: settings.ignoreLeaves,
       });
@@ -110,6 +112,13 @@ export default function SettingsView() {
             <Input
               value={formData.complexities}
               onChange={e => setFormData({ ...formData, complexities: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Story Stages (JSON Array)</Label>
+            <Input
+              value={formData.storyStages}
+              onChange={e => setFormData({ ...formData, storyStages: e.target.value })}
             />
           </div>
           <div className="grid gap-2">
