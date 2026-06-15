@@ -32,6 +32,7 @@ model Member {
   qaStories Story[] @relation("QaToStory")
   leaves Leave[]
   dsus DsuUpdate[]
+  reminders Reminder[]
 }
 
 model Project {
@@ -101,6 +102,7 @@ model Story {
   proposedEnd DateTime
   sprint Sprint @relation(fields: [sprintId], references: [id])
   dsus DsuUpdate[]
+  reminders Reminder[]
   authorMember Member? @relation("AuthorToStory", fields: [authorId], references: [id])
   frontendMember Member? @relation("FrontendToStory", fields: [frontendId], references: [id])
   backendMember Member? @relation("BackendToStory", fields: [backendId], references: [id])
@@ -128,4 +130,19 @@ model DsuUpdate {
   stageUpdate String?
   story Story @relation(fields: [storyId], references: [id])
   member Member @relation(fields: [memberId], references: [id])
+}
+
+model Reminder {
+  id Int @id @default(autoincrement())
+  title String
+  description String?
+  dueDate DateTime
+  priority String @default("medium")
+  memberId Int?
+  storyId Int?
+  completed Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  member Member? @relation(fields: [memberId], references: [id])
+  story Story? @relation(fields: [storyId], references: [id])
 }
