@@ -7,11 +7,39 @@ const daysBetween = (a: Date, b: Date) =>
 const fibonacciNumbers = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
 
 const roundToNearestFibonacci = (num: number): number => {
+  if (num <= 0) return 0;
   if (num <= 1) return 1;
-  const closest = fibonacciNumbers.reduce((prev, curr) =>
+  return fibonacciNumbers.reduce((prev, curr) =>
     Math.abs(curr - num) < Math.abs(prev - num) ? curr : prev
   );
-  return closest;
+};
+
+// Count working days in a range excluding weekends and member leave days
+const getWorkingDays = (
+  startDate: Date,
+  endDate: Date,
+  leaves: { startDate: Date | string; endDate: Date | string }[]
+): number => {
+  let count = 0;
+  const current = new Date(startDate);
+  current.setHours(0, 0, 0, 0);
+  const end = new Date(endDate);
+  end.setHours(0, 0, 0, 0);
+
+  while (current <= end) {
+    const day = current.getDay();
+    const isWeekend = day === 0 || day === 6;
+    if (!isWeekend) {
+      const onLeave = leaves.some(l => {
+        const ls = new Date(l.startDate); ls.setHours(0, 0, 0, 0);
+        const le = new Date(l.endDate); le.setHours(0, 0, 0, 0);
+        return current >= ls && current <= le;
+      });
+      if (!onLeave) count++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return count;
 };
 
 const router = Router();
@@ -95,12 +123,23 @@ router.get('/team-availability', async (req, res) => {
         return acc;
       }, 0);
 
-    // Round total to nearest Fibonacci number
+    // Round total allocated SP to nearest Fibonacci number
     const memberStoryPointsRounded = roundToNearestFibonacci(memberStoryPoints);
+
+    // Available SP = working days in sprint (excl. weekends + this member's leaves) * 0.9, rounded to nearest Fib
+    let availableSP = 0;
+    if (activeSprint) {
+      const workingDays = getWorkingDays(
+        new Date(activeSprint.startDate),
+        new Date(activeSprint.endDate),
+        member.leaves
+      );
+      availableSP = roundToNearestFibonacci(workingDays * 0.9);
+    }
 
     // Check if on leave today
     const onLeave = member.leaves.some(l => new Date(l.startDate) <= today && new Date(l.endDate) >= today);
-    if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded };
+    if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded, availableSP };
 
     let isBusyToday = false;
 
@@ -129,10 +168,10 @@ router.get('/team-availability', async (req, res) => {
     }
 
     if (isBusyToday) {
-      return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded };
+      return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded, availableSP };
     }
 
-    return { member, status: 'free', color: 'green', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded };
+    return { member, status: 'free', color: 'green', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded, availableSP };
   });
 
   res.json(availability);
