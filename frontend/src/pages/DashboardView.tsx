@@ -47,13 +47,12 @@ export default function DashboardView() {
 
   const availMap = {
     'free': { color: '#22c55e', text: 'Free' },
-    'about-to-free': { color: '#f59e0b', text: 'Ending Soon' },
     'busy': { color: '#ef4444', text: 'Busy' },
     'leave': { color: '#9ca3af', text: 'On Leave' }
   };
 
   const activeSprint = (sprints as any[]).find((s: any) => s.status === 'Active') || sprints[0];
-  const activeSprintStories = stories.filter((s: any) => (activeSprint as any)?.id && s.sprintId === (activeSprint as any).id);
+  const activeSprintStories = activeSprint?.id ? stories.filter((s: any) => s.sprintId === (activeSprint as any).id) : [];
   const totalSprintPoints = activeSprintStories.reduce((acc: number, s: any) => acc + (s.storyPoints || 0), 0);
 
   const ganttStart = activeSprint ? new Date((activeSprint as any).startDate) : new Date();
