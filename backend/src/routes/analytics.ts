@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
+import { differenceInDays } from 'date-fns';
 
 const router = Router();
 
@@ -51,16 +52,36 @@ router.get('/team-availability', async (req, res) => {
   const today = new Date();
 
   const availability = members.map(member => {
-    // Story points for this member in the active sprint
+    // Story points for this member in the active sprint (pro-rated by days assigned)
     const sprintStories = activeSprint?.stories ?? [];
     const memberStoryPoints = sprintStories
-      .filter(s =>
-        s.frontendId === member.id ||
-        s.backendId === member.id ||
-        s.qaId === member.id ||
-        s.authorId === member.id
-      )
-      .reduce((acc, s) => acc + s.storyPoints, 0);
+      .reduce((acc, s) => {
+        let roleStartDate = null;
+        let roleEndDate = null;
+
+        if (s.frontendId === member.id) {
+          roleStartDate = s.frontendStart;
+          roleEndDate = s.frontendEnd;
+        } else if (s.backendId === member.id) {
+          roleStartDate = s.backendStart;
+          roleEndDate = s.backendEnd;
+        } else if (s.qaId === member.id) {
+          roleStartDate = s.qaStart;
+          roleEndDate = s.qaEnd;
+        } else if (s.authorId === member.id) {
+          roleStartDate = s.authorStart;
+          roleEndDate = s.authorEnd;
+        }
+
+        if (roleStartDate && roleEndDate) {
+          const storyDays = differenceInDays(new Date(s.proposedEnd), new Date(s.proposedStart)) + 1;
+          const roleDays = differenceInDays(new Date(roleEndDate), new Date(roleStartDate)) + 1;
+          const proRatedSP = (roleDays / storyDays) * s.storyPoints;
+          return acc + proRatedSP;
+        }
+
+        return acc;
+      }, 0);
 
     // Check if on leave today
     const onLeave = member.leaves.some(l => new Date(l.startDate) <= today && new Date(l.endDate) >= today);
