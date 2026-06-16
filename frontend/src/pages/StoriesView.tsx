@@ -9,6 +9,16 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import StoryTimeline from '../components/StoryTimeline';
 import StatusDot from '../components/StatusDot';
+import { Upload } from 'lucide-react';
+
+interface CSVMappingConfig {
+  [storyField: string]: string; // storyField -> csvColumnIndex
+}
+
+interface ParsedCSV {
+  headers: string[];
+  rows: string[][];
+}
 
 export default function StoriesView() {
   const [stories, setStories] = useState<any[]>([]);
@@ -18,6 +28,10 @@ export default function StoriesView() {
   const [overloadWarning, setOverloadWarning] = useState<string | null>(null);
   const [timelineStory, setTimelineStory] = useState<any>(null);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [csvImportOpen, setCSVImportOpen] = useState(false);
+  const [parsedCSV, setParsedCSV] = useState<ParsedCSV | null>(null);
+  const [csvMapping, setCSVMapping] = useState<CSVMappingConfig>({});
+  const [importStep, setImportStep] = useState<'upload' | 'mapping' | 'preview'>('upload');
 
   const { settings } = useAppStore();
   const complexities = settings?.complexities ? JSON.parse(settings.complexities) : ['Easy', 'Medium', 'Hard'];
@@ -43,6 +57,92 @@ export default function StoriesView() {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const parseCSV = (text: string): ParsedCSV => {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const rows = lines.slice(1).map(line => {
+      const values: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') inQuotes = !inQuotes;
+        else if (char === ',' && !inQuotes) {
+          values.push(current.trim().replace(/^"|"$/g, ''));
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current.trim().replace(/^"|"$/g, ''));
+      return values;
+    });
+    return { headers, rows };
+  };
+
+  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      const parsed = parseCSV(text);
+      setParsedCSV(parsed);
+      setCSVMapping({});
+      setImportStep('mapping');
+    };
+    reader.readAsText(file);
+  };
+
+  const parseDate = (dateStr: string): string => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
+  const getMappedValue = (rowIndex: number, fieldName: string): string => {
+    if (!parsedCSV) return '';
+    const csvColIndex = parseInt(csvMapping[fieldName] ?? '-1');
+    if (csvColIndex < 0) return '';
+    return parsedCSV.rows[rowIndex]?.[csvColIndex] ?? '';
+  };
+
+  const getMappedStory = (rowIndex: number) => {
+    if (!parsedCSV) return null;
+    return {
+      sprintId: getMappedValue(rowIndex, 'sprintId'),
+      storyNumber: getMappedValue(rowIndex, 'storyNumber'),
+      name: getMappedValue(rowIndex, 'name'),
+      proposedStart: parseDate(getMappedValue(rowIndex, 'proposedStart')),
+      proposedEnd: parseDate(getMappedValue(rowIndex, 'proposedEnd')),
+      storyPoints: parseInt(getMappedValue(rowIndex, 'storyPoints')) || 0,
+      complexity: getMappedValue(rowIndex, 'complexity') || complexities[0],
+    };
+  };
+
+  const handleImportStories = async () => {
+    if (!parsedCSV) return;
+    try {
+      for (let i = 0; i < parsedCSV.rows.length; i++) {
+        const mappedStory = getMappedStory(i);
+        if (!mappedStory?.storyNumber || !mappedStory?.name) continue;
+        await axios.post(`${API_URL}/stories`, {
+          ...mappedStory,
+          sprintId: parseInt(mappedStory.sprintId) || (sprints[0]?.id ?? null),
+          stage: 'todo',
+        });
+      }
+      alert(`Imported ${parsedCSV.rows.length} stories!`);
+      setCSVImportOpen(false);
+      setImportStep('upload');
+      fetchData();
+    } catch (error) {
+      alert('Error importing stories');
+      console.error(error);
+    }
+  };
 
   const checkAvailability = async () => {
     if (!formData.proposedStart || !formData.proposedEnd) return;
@@ -116,10 +216,87 @@ export default function StoriesView() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Stories</CardTitle>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setFormData(initData)}>Add Story</Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={csvImportOpen} onOpenChange={setCSVImportOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => setImportStep('upload')} className="flex items-center gap-2">
+                <Upload className="w-4 h-4" /> Import CSV
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Import Stories from CSV</DialogTitle>
+              </DialogHeader>
+              {importStep === 'upload' && (
+                <div className="space-y-4">
+                  <div className="border-2 border-dashed rounded p-6 text-center">
+                    <Input type="file" accept=".csv" onChange={handleCSVUpload} className="cursor-pointer" />
+                  </div>
+                  <p className="text-xs text-slate-500">CSV should have headers in the first row</p>
+                </div>
+              )}
+              {importStep === 'mapping' && parsedCSV && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-3">Map CSV columns to Story fields</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {['sprintId', 'storyNumber', 'name', 'proposedStart', 'proposedEnd', 'storyPoints', 'complexity'].map(field => (
+                        <div key={field} className="grid gap-2">
+                          <Label className="text-xs">{field}</Label>
+                          <select
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            value={csvMapping[field] ?? '-1'}
+                            onChange={e => setCSVMapping({ ...csvMapping, [field]: e.target.value })}
+                          >
+                            <option value="-1">-- Not mapped --</option>
+                            {parsedCSV.headers.map((header, idx) => (
+                              <option key={idx} value={idx}>{header}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2 text-sm">Preview (first 3 rows)</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>storyNumber</TableHead>
+                          <TableHead>name</TableHead>
+                          <TableHead>proposedStart</TableHead>
+                          <TableHead>proposedEnd</TableHead>
+                          <TableHead>sprintId</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {parsedCSV.rows.slice(0, 3).map((_, idx) => {
+                          const mapped = getMappedStory(idx);
+                          return (
+                            <TableRow key={idx}>
+                              <TableCell className="text-sm">{mapped?.storyNumber || '-'}</TableCell>
+                              <TableCell className="text-sm">{mapped?.name || '-'}</TableCell>
+                              <TableCell className="text-sm">{mapped?.proposedStart || '-'}</TableCell>
+                              <TableCell className="text-sm">{mapped?.proposedEnd || '-'}</TableCell>
+                              <TableCell className="text-sm">{mapped?.sprintId || '-'}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setImportStep('upload')}>Back</Button>
+                    <Button onClick={handleImportStories}>Import {parsedCSV.rows.length} Stories</Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setFormData(initData)}>Add Story</Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{formData.id ? 'Edit' : 'Add'} Story</DialogTitle>
@@ -261,6 +438,7 @@ export default function StoriesView() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
