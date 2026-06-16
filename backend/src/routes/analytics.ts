@@ -92,39 +92,36 @@ router.get('/team-availability', async (req, res) => {
   const today = new Date();
 
   const availability = members.map(member => {
-    // Story points for this member in the active sprint (pro-rated by days assigned)
+    // Allocated SP = total days assigned across all stories (like Gantt shows)
     const sprintStories = activeSprint?.stories ?? [];
-    const memberStoryPoints = sprintStories
-      .reduce((acc, s) => {
-        let roleStartDate = null;
-        let roleEndDate = null;
+    let totalAssignedDays = 0;
 
-        if (s.frontendId === member.id) {
-          roleStartDate = s.frontendStart;
-          roleEndDate = s.frontendEnd;
-        } else if (s.backendId === member.id) {
-          roleStartDate = s.backendStart;
-          roleEndDate = s.backendEnd;
-        } else if (s.qaId === member.id) {
-          roleStartDate = s.qaStart;
-          roleEndDate = s.qaEnd;
-        } else if (s.authorId === member.id) {
-          roleStartDate = s.authorStart;
-          roleEndDate = s.authorEnd;
-        }
+    for (const s of sprintStories) {
+      let roleStart = null;
+      let roleEnd = null;
 
-        if (roleStartDate && roleEndDate) {
-          const storyDays = daysBetween(new Date(s.proposedStart), new Date(s.proposedEnd)) + 1;
-          const roleDays = daysBetween(new Date(roleStartDate), new Date(roleEndDate)) + 1;
-          const proRatedSP = (roleDays / storyDays) * s.storyPoints;
-          return acc + proRatedSP;
-        }
+      if (s.frontendId === member.id) {
+        roleStart = s.frontendStart;
+        roleEnd = s.frontendEnd;
+      } else if (s.backendId === member.id) {
+        roleStart = s.backendStart;
+        roleEnd = s.backendEnd;
+      } else if (s.qaId === member.id) {
+        roleStart = s.qaStart;
+        roleEnd = s.qaEnd;
+      } else if (s.authorId === member.id) {
+        roleStart = s.authorStart;
+        roleEnd = s.authorEnd;
+      }
 
-        return acc;
-      }, 0);
+      if (roleStart && roleEnd) {
+        const assignedDays = daysBetween(new Date(roleStart), new Date(roleEnd)) + 1;
+        totalAssignedDays += assignedDays;
+      }
+    }
 
-    // Round total allocated SP to nearest Fibonacci number
-    const memberStoryPointsRounded = roundToNearestFibonacci(memberStoryPoints);
+    // Allocated SP = total assigned days rounded to nearest Fibonacci
+    const allocatedSP = roundToNearestFibonacci(totalAssignedDays);
 
     // Available SP = working days in sprint (excl. weekends + this member's leaves) * 0.9, rounded to nearest Fib
     let availableSP = 0;
@@ -139,7 +136,7 @@ router.get('/team-availability', async (req, res) => {
 
     // Check if on leave today
     const onLeave = member.leaves.some(l => new Date(l.startDate) <= today && new Date(l.endDate) >= today);
-    if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded, availableSP };
+    if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: allocatedSP, availableSP };
 
     let isBusyToday = false;
 
@@ -168,10 +165,10 @@ router.get('/team-availability', async (req, res) => {
     }
 
     if (isBusyToday) {
-      return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded, availableSP };
+      return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: allocatedSP, availableSP };
     }
 
-    return { member, status: 'free', color: 'green', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded, availableSP };
+    return { member, status: 'free', color: 'green', allLeaves: member.leaves, storyPoints: allocatedSP, availableSP };
   });
 
   res.json(availability);
