@@ -208,7 +208,7 @@ export default function DashboardView() {
                   <span className="text-sm font-medium">{a.member.name} ({a.member.role})</span>
                   <div className="flex items-center gap-2">
                     {a.storyPoints > 0 && (
-                      <span className="text-xs bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded font-mono">{a.storyPoints} SP</span>
+                      <span className="text-xs bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded font-mono">{Math.round(a.storyPoints)} SP</span>
                     )}
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: (availMap as any)[a.status].color }} />
                     <span className="text-xs text-slate-500">{(availMap as any)[a.status].text}</span>
