@@ -67,7 +67,6 @@ router.get('/team-availability', async (req, res) => {
     if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: memberStoryPoints };
 
     let isBusyToday = false;
-    let endingSoon = false;
 
     for (const s of activeStories) {
       let mStart, mEnd;
@@ -89,14 +88,11 @@ router.get('/team-availability', async (req, res) => {
 
         if (todayAtMidnight >= startAtMidnight && todayAtMidnight <= endAtMidnight) {
           isBusyToday = true;
-          const daysDiff = (endAtMidnight.getTime() - todayAtMidnight.getTime()) / (1000 * 3600 * 24);
-          if (daysDiff >= 0 && daysDiff <= 2) endingSoon = true;
         }
       }
     }
 
     if (isBusyToday) {
-      if (endingSoon) return { member, status: 'about-to-free', color: 'amber', allLeaves: member.leaves, storyPoints: memberStoryPoints };
       return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: memberStoryPoints };
     }
 
