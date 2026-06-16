@@ -89,16 +89,18 @@ router.get('/team-availability', async (req, res) => {
           const storyDays = daysBetween(new Date(s.proposedStart), new Date(s.proposedEnd)) + 1;
           const roleDays = daysBetween(new Date(roleStartDate), new Date(roleEndDate)) + 1;
           const proRatedSP = (roleDays / storyDays) * s.storyPoints;
-          const roundedSP = roundToNearestFibonacci(proRatedSP);
-          return acc + roundedSP;
+          return acc + proRatedSP;
         }
 
         return acc;
       }, 0);
 
+    // Round total to nearest Fibonacci number
+    const memberStoryPointsRounded = roundToNearestFibonacci(memberStoryPoints);
+
     // Check if on leave today
     const onLeave = member.leaves.some(l => new Date(l.startDate) <= today && new Date(l.endDate) >= today);
-    if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: memberStoryPoints };
+    if (onLeave) return { member, status: 'leave', color: 'gray', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded };
 
     let isBusyToday = false;
 
@@ -127,10 +129,10 @@ router.get('/team-availability', async (req, res) => {
     }
 
     if (isBusyToday) {
-      return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: memberStoryPoints };
+      return { member, status: 'busy', color: 'red', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded };
     }
 
-    return { member, status: 'free', color: 'green', allLeaves: member.leaves, storyPoints: memberStoryPoints };
+    return { member, status: 'free', color: 'green', allLeaves: member.leaves, storyPoints: memberStoryPointsRounded };
   });
 
   res.json(availability);
