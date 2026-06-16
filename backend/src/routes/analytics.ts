@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../prisma';
-import { differenceInDays } from 'date-fns';
+
+const daysBetween = (a: Date, b: Date) =>
+  Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 
 const router = Router();
 
@@ -74,8 +76,8 @@ router.get('/team-availability', async (req, res) => {
         }
 
         if (roleStartDate && roleEndDate) {
-          const storyDays = differenceInDays(new Date(s.proposedEnd), new Date(s.proposedStart)) + 1;
-          const roleDays = differenceInDays(new Date(roleEndDate), new Date(roleStartDate)) + 1;
+          const storyDays = daysBetween(new Date(s.proposedStart), new Date(s.proposedEnd)) + 1;
+          const roleDays = daysBetween(new Date(roleStartDate), new Date(roleEndDate)) + 1;
           const proRatedSP = (roleDays / storyDays) * s.storyPoints;
           return acc + proRatedSP;
         }
