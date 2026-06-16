@@ -4,6 +4,16 @@ import { prisma } from '../prisma';
 const daysBetween = (a: Date, b: Date) =>
   Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 
+const fibonacciNumbers = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144, 233, 377];
+
+const roundToNearestFibonacci = (num: number): number => {
+  if (num <= 1) return 1;
+  const closest = fibonacciNumbers.reduce((prev, curr) =>
+    Math.abs(curr - num) < Math.abs(prev - num) ? curr : prev
+  );
+  return closest;
+};
+
 const router = Router();
 
 const isDoneStage = (stage: string | null | undefined) =>
@@ -79,7 +89,8 @@ router.get('/team-availability', async (req, res) => {
           const storyDays = daysBetween(new Date(s.proposedStart), new Date(s.proposedEnd)) + 1;
           const roleDays = daysBetween(new Date(roleStartDate), new Date(roleEndDate)) + 1;
           const proRatedSP = (roleDays / storyDays) * s.storyPoints;
-          return acc + proRatedSP;
+          const roundedSP = roundToNearestFibonacci(proRatedSP);
+          return acc + roundedSP;
         }
 
         return acc;
