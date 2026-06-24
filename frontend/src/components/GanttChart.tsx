@@ -134,6 +134,15 @@ export default function GanttChart({ stories, sprintStart, sprintEnd, viewType, 
 
   const renderPeopleRow = () => {
     const peopleMap = new Map();
+    // Initialize with all members if availability is provided
+    if (availability) {
+      availability.forEach(a => {
+        if (a.member && a.member.id) {
+          peopleMap.set(a.member.id, { id: a.member.id, name: a.member.name, tasks: [] });
+        }
+      });
+    }
+
     stories.forEach(s => {
       [
         { id: s.frontendId, name: s.frontendMember?.name || 'Unassigned (FE)', type: 'frontend', start: s.frontendStart, end: s.frontendEnd, story: s },
